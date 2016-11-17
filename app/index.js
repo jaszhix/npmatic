@@ -90,6 +90,7 @@ var PackageColumn = React.createClass({
                       <div onMouseLeave={()=>this.setState({subItemHover: -1})}>
                         {item.value.map((subItem, s)=>{
                           if (_.isArray(subItem)) {
+                            var isDependencies = item.key.indexOf('depend') !== -1;
                             return (
                               <div 
                               key={s} 
@@ -97,8 +98,8 @@ var PackageColumn = React.createClass({
                               style={{backgroundColor: this.state.subItemHover === `${item.key}-${s}` && item.key.indexOf('depend') !== -1 ? 'rgb(249, 250, 251)' : 'initial'}}
                               onClick={item.key.indexOf('depend') !== -1 ? ()=>state.set({view: 'search', search: subItem[0]}) : null} 
                               onMouseEnter={item.key.indexOf('depend') !== -1 ? ()=>this.setState({subItemHover: `${item.key}-${s}`}) : null}>
-                                <div className="four wide column" style={{fontWeight: '500'}}>{item.key.indexOf('depend') === -1 && item.key !== 'scripts' ? subItem[0].length <= 3 ? subItem[0].toUpperCase() : _.upperFirst(subItem[0]) : subItem[0]}</div>
-                                <div className="twelve wide column" style={textOverflow}>{subItem[1]}</div>
+                                <div className={`${isDependencies ? 'ten' : 'four'} wide column`} style={{fontWeight: '500'}}>{item.key.indexOf('depend') === -1 && item.key !== 'scripts' ? subItem[0].length <= 3 ? subItem[0].toUpperCase() : _.upperFirst(subItem[0]) : subItem[0]}</div>
+                                <div className={`${isDependencies ? 'six' : 'twelve'} wide column`} style={textOverflow}>{subItem[1]}</div>
                               </div>
                             );
                   
