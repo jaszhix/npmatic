@@ -52,7 +52,6 @@
   },
   "dependencies": {
     "all-the-package-names": "^1.3044.0",
-    "all-the-packages": "^1.0.2",
     "axios": "^0.15.2",
     "css-loader": "^0.25.0",
     "curlrequest": "^1.0.0",

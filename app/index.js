@@ -64,6 +64,19 @@ var PackageColumn = React.createClass({
       });
     });
   },
+  handleDependencyClick(key){
+    var p = this.props;
+    if (p.global) {
+      state.set({view: 'search', search: key});
+    } else {
+      var refDep = _.findIndex(p.installed, {name: key});
+      if (refDep !== -1) {
+        state.set({package: p.installed[refDep], title: p.installed[refDep].name});
+      } else {
+        state.set({view: 'search', search: key});
+      }
+    }
+  },
   render(){
     var textOverflow = {
       whiteSpace: 'nowrap',
@@ -95,8 +108,8 @@ var PackageColumn = React.createClass({
                               <div 
                               key={s} 
                               className="ui grid segments" 
-                              style={{backgroundColor: this.state.subItemHover === `${item.key}-${s}` && item.key.indexOf('depend') !== -1 ? 'rgb(249, 250, 251)' : 'initial'}}
-                              onClick={item.key.indexOf('depend') !== -1 ? ()=>state.set({view: 'search', search: subItem[0]}) : null} 
+                              style={{backgroundColor: this.state.subItemHover === `${item.key}-${s}` && isDependencies ? 'rgb(249, 250, 251)' : 'initial'}}
+                              onClick={item.key.indexOf('depend') !== -1 ? ()=>this.handleDependencyClick(subItem[0]) : null} 
                               onMouseEnter={item.key.indexOf('depend') !== -1 ? ()=>this.setState({subItemHover: `${item.key}-${s}`}) : null}>
                                 <div className={`${isDependencies ? 'ten' : 'four'} wide column`} style={{fontWeight: '500'}}>{item.key.indexOf('depend') === -1 && item.key !== 'scripts' ? subItem[0].length <= 3 ? subItem[0].toUpperCase() : _.upperFirst(subItem[0]) : subItem[0]}</div>
                                 <div className={`${isDependencies ? 'six' : 'twelve'} wide column`} style={textOverflow}>{subItem[1]}</div>
@@ -142,11 +155,15 @@ var Package = React.createClass({
     };
   },
   componentDidMount(){
-    document.body.scrollIntoView();
-    this.formatPackage();
+    this.formatPackage(this.props);
   },
-  formatPackage(){
-    var p = this.props;
+  componentWillReceiveProps(nP){
+    if (!_.isEqual(nP.s.package, this.props.s.package)) {
+      this.formatPackage(nP);
+    }
+  },
+  formatPackage(p){
+    document.body.scrollIntoView();
     var items = [];
     var removedKeys = ['_inCache', '_phantomChildren', '_shrinkwrap', '_args', '_npmOperationalInternal', 'location', 'name'];
 
@@ -217,8 +234,8 @@ var Package = React.createClass({
       return (
         <div className="ui grid" style={{paddingLeft: '8px', paddingRight: '8px'}}>
           <div className="two column row">
-            <PackageColumn items={list1} descriptionMarkup={descriptionMarkup} width={p.s.width}/>
-            <PackageColumn items={list2} descriptionMarkup={descriptionMarkup} width={p.s.width}/>
+            <PackageColumn items={list1} descriptionMarkup={descriptionMarkup} width={p.s.width} global={p.s.global} installed={p.s.installed}/>
+            <PackageColumn items={list2} descriptionMarkup={descriptionMarkup} width={p.s.width} global={p.s.global} installed={p.s.installed}/>
           </div>
         </div>
       );
