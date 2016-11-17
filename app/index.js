@@ -502,8 +502,6 @@ var App = React.createClass({
     } else {
       execa.shell(command).then(result => {
         cb(result);
-        state.set({installing: false});
-        this.getInstalledPackages(false); 
       });
     }
   },
