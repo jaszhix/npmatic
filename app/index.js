@@ -258,7 +258,17 @@ var Table = React.createClass({
     _.each(p.data, (item, arrKey)=>{
       item.data = item;
       var _item = _.cloneDeep(item);
-      _item = _.pick(_item, ['name', 'description', 'version', 'license', 'data']);
+
+      var keys = ['name', 'description', 'version', 'license', 'data'];
+
+      if (!s.global) {
+        var keys1 = _.slice(keys, 0, 2);
+        var keys2 = _.slice(keys, 2, 5);
+        keys1 = _.concat(keys1, ['dev']);
+        keys = _.concat(keys1, keys2);
+      }
+
+      _item = _.pick(_item, keys);
 
       if (arrKey === 0) {
         columns = _.keys(_item);
@@ -304,20 +314,22 @@ var Table = React.createClass({
                   if (column === 'data') {
                     return null;
                   }
-                  if (column === 'View or Edit') {
-                    return (
-                      <td 
-                      key={c}
-                      className="single line"
-                      style={{width: column === 'Name' ? '100px' : '75px'}}><a style={{cursor: 'pointer'}}>Open</a></td>
-                    );
-                  } else if (column === 'description') {
+                  if (column === 'description') {
                     var createMarkup = ()=> { return {__html: row[column]};};
                     return (
                       <td 
                       key={c}
                       className="top aligned">
                         <div dangerouslySetInnerHTML={createMarkup()} />
+                      </td>
+                    );
+                  } else if (column === 'dev') {
+                    return (
+                      <td 
+                      key={c}
+                      className="center aligned">
+                        {row[column] ?
+                          <i className="large green checkmark icon" /> : null}
                       </td>
                     );
                   } else {
