@@ -353,7 +353,7 @@ var Container = React.createClass({
       return;
     }
 
-    var search = p.s.search.indexOf(' ') !== -1  ? p.s.search.split(' ').join('-') : p.s.search;
+    var search = p.s.search.indexOf(' ') !== -1 ? p.s.search.split(' ').join('-') : p.s.search;
 
     var query = _.filter(names, (name)=>{
       return name === search;
@@ -518,42 +518,59 @@ var App = React.createClass({
     if (s.search.length > 0 && s.view === 'package') {
       state.set({view: 'search'});
       return;
-
     }
-    var pkgs = [];
-    fs.readdir(s.nmDir, (err, dir)=>{
-      for (let i = 0, len = dir.length; i < len; i++) {
-        if (dir[i][0] !== '.') {
-          var packageJSON = JSON.parse(fs.readFileSync(`${s.nmDir}${dir[i]}/package.json`, 'utf8'));
-          pkgs.push(packageJSON);
+
+    execa.shell('npm root -g').then(result => {
+      console.log('root: ', result.stdout);
+      var nmDir = s.nmDir.length > 0 && !s.global ? s.nmDir : `${result.stdout}/`;
+      var pkgs = [];
+      fs.readdir(nmDir, (err, dir)=>{
+        for (let i = 0, len = dir.length; i < len; i++) {
+          if (dir[i][0] !== '.') {
+            var packageJSON = JSON.parse(fs.readFileSync(`${nmDir}${dir[i]}/package.json`, 'utf8'));
+            pkgs.push(packageJSON);
+          }
         }
-      }
-      if (!s.global) {
-        var locNmDir = this.getProjectDir(s.nmDir);
-        var projectJSON = JSON.parse(fs.readFileSync(`${locNmDir}package.json`, 'utf8'));
-        var dependencies = [];
-        _.each(projectJSON.dependencies, (dep, key)=>{
-          var refDep = _.findIndex(pkgs, {name: key});
-          dependencies.push(pkgs[refDep]);
-        });
-      }
+        if (!s.global) {
+          var baseDir = this.getProjectDir(nmDir);
+          var projectJSON = JSON.parse(fs.readFileSync(`${baseDir}package.json`, 'utf8'));
+          var dependencies = [];
 
-      var stateUpdate = {
-        pkgs: s.global ? pkgs : dependencies, 
-        installed: pkgs
-      };
-      if (route) {
-        _.assignIn(stateUpdate, {
-          view: 'index', 
-          search: '',
-          searchQuery: [],
-          searchPkgs: [],
-          searchPage: 1,
-          title: 'Installed Packages'
-        });
-      }
+          // Pull dependencies from the initial node_modules query
+          _.each(projectJSON.dependencies, (dep, key)=>{
+            var refDep = _.findIndex(pkgs, {name: key});
+            if (refDep !== -1) {
+              pkgs[refDep].dev = false;
+              dependencies.push(pkgs[refDep]);
+            }
+          });
+          _.each(projectJSON.devDependencies, (dep, key)=>{
+            var refDep = _.findIndex(pkgs, {name: key});
+            if (refDep !== -1) {
+              pkgs[refDep].dev = true;
+              dependencies.push(pkgs[refDep]);
+            }
+          });
 
-      state.set(stateUpdate);
+        }
+
+        var stateUpdate = {
+          pkgs: s.global ? pkgs : dependencies, 
+          installed: pkgs
+        };
+        if (route) {
+          _.assignIn(stateUpdate, {
+            view: 'index', 
+            search: '',
+            searchQuery: [],
+            searchPkgs: [],
+            searchPage: 1,
+            title: 'Installed Packages'
+          });
+        }
+
+        state.set(stateUpdate);
+      });
     });
   },
   handleInstall(){

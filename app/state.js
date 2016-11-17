@@ -16,7 +16,7 @@ var state = Reflux.createStore({
       registry: [],
       installed: [],
       global: true,
-      nmDir: '/usr/lib/node_modules/',
+      nmDir: '',
       installing: false,
       // UI
       settingsOpen: false,
