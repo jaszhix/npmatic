@@ -36759,7 +36759,7 @@ html.ios body {
 /*******************************
          Site Overrides
 *******************************/
-#appContainer > div > div > div.ten.wide.column > p > a > img, #appContainer > table > tbody > tr > td.top.aligned > div > p > a > img {
+#appContainer > div > div > div.ten.wide.column > p > a > img, #appContainer > table > tbody > tr > td.middle.aligned > div > p > a > img {
   max-width: 80px;
   float: left;
 }

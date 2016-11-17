@@ -336,7 +336,7 @@ var Table = React.createClass({
                     return (
                       <td 
                       key={c}
-                      className="top aligned">
+                      className="middle aligned">
                         <div dangerouslySetInnerHTML={createMarkup()} />
                       </td>
                     );
