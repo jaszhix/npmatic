@@ -27,11 +27,14 @@ var state = Reflux.createStore({
       searchPageSize: 20
     };
   },
-  set(obj){
+  set(obj, cb=null){
     console.log('STATE INPUT: ', obj);
     _.assignIn(this.state, _.cloneDeep(obj));
     console.log('STATE: ', this.state);
     this.trigger(this.state);
+    if (cb) {
+      _.defer(()=>cb());
+    }
   },
   get(){
     return this.state;

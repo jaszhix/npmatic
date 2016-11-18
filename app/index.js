@@ -465,6 +465,9 @@ var DropdownMenu = onClickOutside(React.createClass({
       }
     });
   },
+  handleOpenGlobal(){
+    state.set({global: true, nmDir: ''}, ()=>this.props.onDirOpen());
+  },
   render(){
     var p = this.props;
     return (
@@ -474,6 +477,10 @@ var DropdownMenu = onClickOutside(React.createClass({
           <div className="item" onClick={this.handleOpenDir}>
             Open Directory
           </div>
+          {!p.s.global ?
+          <div className="item" onClick={this.handleOpenGlobal}>
+            Open Global Packages
+          </div> : null}
           <div className="divider"></div>
           <div className="item" onClick={this.handleAbout}>
             About
@@ -595,7 +602,7 @@ var App = React.createClass({
             searchQuery: [],
             searchPkgs: [],
             searchPage: 1,
-            title: 'Installed Packages'
+            title: s.global ? 'Global Packages' : `${projectJSON.name} ${projectJSON.version}`
           });
         }
 
