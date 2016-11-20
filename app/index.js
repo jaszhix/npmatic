@@ -591,6 +591,8 @@ var App = React.createClass({
                     }
                   }
                 });
+              } else {
+                resolve();
               }
             }
           }
@@ -602,8 +604,7 @@ var App = React.createClass({
           if (s.global) {
             console.log(dependencies);
             dependencies = _.concat(dependencies, pkgs);
-          }
-          if (!s.global) {
+          } else {
             var baseDir = this.getProjectDir(nmDir);
             var projectJSON = JSON.parse(fs.readFileSync(`${baseDir}package.json`, 'utf8'));
 
