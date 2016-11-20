@@ -602,7 +602,6 @@ var App = React.createClass({
       fs.readdir(nmDir, (err, dir)=>{
         collectDependencies(dir).then(()=>{
           if (s.global) {
-            console.log(dependencies);
             dependencies = _.concat(dependencies, pkgs);
           } else {
             var baseDir = this.getProjectDir(nmDir);
@@ -692,7 +691,7 @@ var App = React.createClass({
     var s = this.state;
     var isChildView = s.view !== 'index';
     var isInstalled = null;
-    var isPaginated = s.view === 'search' && s.searchQuery.length > 20;
+    var isPaginated = s.view === 'search' && s.searchQuery.length > 20 && s.pkgs.length >= 20;
     if (s.view === 'package') {
       isInstalled = _.map(s.installed, 'name').indexOf(s.package.name) !== -1;
     }
@@ -720,7 +719,7 @@ var App = React.createClass({
             left: !isChildView ? '32px' : isPaginated ? '102px' : '62px',
             top: '5px',
             margin: isChildView ? '0px' : 'initial',
-            WebkitTransition: 'left 0.2s'
+            WebkitTransition: 'left 0.1s'
           }}>{s.title}</h2>
           <div className="right menu">
             <a 
