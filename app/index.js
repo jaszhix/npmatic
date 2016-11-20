@@ -53,6 +53,7 @@ window.addEventListener('contextmenu', (e) => {
 var PackageColumn = React.createClass({
   getInitialState(){
     return {
+      itemHover: -1,
       subItemHover: -1
     };
   },
@@ -73,6 +74,17 @@ var PackageColumn = React.createClass({
       state.set({view: 'search', search: key});
     }
   },
+  handleUrlClick(item, subItem){
+    console.log(item, subItem);
+    if (item.key === 'bugs' || item.key === 'author') {
+      openExternal(subItem[1]);
+    } else if (item.key === 'repository') {
+      var url = subItem[1].split('git+')[1].split('.git')[0];
+      openExternal(url);
+    } else if (item.key === 'homepage') {
+      openExternal(item.value);
+    }
+  },
   render(){
     var textOverflow = {
       whiteSpace: 'nowrap',
@@ -86,9 +98,20 @@ var PackageColumn = React.createClass({
         {this.props.items.map((item, i)=>{
           if (!_.isEmpty(item.value) && item.key !== 'data' && item.key !== 'name') {
             return (
-              <div key={i} className="ui grid stacked segments">
-                <div className="two column row">
-                  <div className={`${_.isArray(item.value) ? 'three' : 'three'} wide column`} style={{fontWeight: '500'}}>{item.key.length <= 2 ? item.key.toUpperCase() : _.upperFirst(item.key)}</div>
+              <div 
+              key={i} 
+              className="ui grid stacked segments"
+              onMouseLeave={this.state.itemHover !== -1 ? ()=>this.setState({itemHover: -1}) : null}>
+                <div 
+                className="two column row"
+                style={{backgroundColor: this.state.itemHover === i ? 'rgb(249, 250, 251)' : 'initial'}}
+                onClick={item.key === 'homepage' ? ()=>this.handleUrlClick(item) : null}
+                onMouseEnter={item.key === 'homepage' ? ()=>this.setState({itemHover: i}) : null}>
+                  <div 
+                  className={`${_.isArray(item.value) ? 'three' : 'three'} wide column`} 
+                  style={{fontWeight: '500'}}>
+                    {item.key.length <= 2 ? item.key.toUpperCase() : _.upperFirst(item.key)}
+                  </div>
                   {item.key === 'description' || item.key === 'readme' ?
                   <div ref="md" className="thirteen wide column">
                     <ReactMarkdown source={item.value} />
@@ -96,7 +119,7 @@ var PackageColumn = React.createClass({
                   :
                   <div className="thirteen wide column" style={textOverflow}>
                     {_.isArray(item.value) ? 
-                      <div onMouseLeave={()=>this.setState({subItemHover: -1})}>
+                      <div onMouseLeave={this.state.subItemHover !== -1 ? ()=>this.setState({subItemHover: -1}) : null}>
                         {item.value.map((subItem, s)=>{
                           if (_.isArray(subItem)) {
                             var isDependencies = item.key.indexOf('depend') !== -1;
@@ -104,9 +127,9 @@ var PackageColumn = React.createClass({
                               <div 
                               key={s} 
                               className="ui grid segments" 
-                              style={{backgroundColor: this.state.subItemHover === `${item.key}-${s}` && isDependencies ? 'rgb(249, 250, 251)' : 'initial'}}
-                              onClick={item.key.indexOf('depend') !== -1 ? ()=>this.handleDependencyClick(subItem[0]) : null} 
-                              onMouseEnter={item.key.indexOf('depend') !== -1 ? ()=>this.setState({subItemHover: `${item.key}-${s}`}) : null}>
+                              style={{backgroundColor: this.state.subItemHover === `${item.key}-${s}` && (isDependencies || subItem[0] === 'url') ? 'rgb(249, 250, 251)' : 'initial'}}
+                              onClick={item.key.indexOf('depend') !== -1 ? ()=>this.handleDependencyClick(subItem[0]) : subItem[0] === 'url' ? ()=>this.handleUrlClick(item, subItem) : null} 
+                              onMouseEnter={isDependencies || subItem[0] === 'url' ? ()=>this.setState({subItemHover: `${item.key}-${s}`}) : null}>
                                 <div className={`${isDependencies ? 'ten' : 'four'} wide column`} style={{fontWeight: '500'}}>{item.key.indexOf('depend') === -1 && item.key !== 'scripts' ? subItem[0].length <= 3 ? subItem[0].toUpperCase() : _.upperFirst(subItem[0]) : subItem[0]}</div>
                                 <div className={`${isDependencies ? 'six' : 'twelve'} wide column`} style={textOverflow}>{subItem[1]}</div>
                               </div>
