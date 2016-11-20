@@ -66,15 +66,11 @@ var PackageColumn = React.createClass({
   },
   handleDependencyClick(key){
     var p = this.props;
-    if (p.global) {
-      state.set({view: 'search', search: key});
+    var refDep = _.findIndex(p.installed, {name: key});
+    if (refDep !== -1) {
+      state.set({package: p.installed[refDep], title: p.installed[refDep].name});
     } else {
-      var refDep = _.findIndex(p.installed, {name: key});
-      if (refDep !== -1) {
-        state.set({package: p.installed[refDep], title: p.installed[refDep].name});
-      } else {
-        state.set({view: 'search', search: key});
-      }
+      state.set({view: 'search', search: key});
     }
   },
   render(){
@@ -291,9 +287,20 @@ var Table = React.createClass({
         columns = _.keys(_item);
       }
 
-      if (_.isObject(_item.license) && _item.license.hasOwnProperty('type')) {
-        _item.license = _item.license.type;
+      if (_.isObject(_item.license)) {
+        if (_item.license.hasOwnProperty('type')) {
+          _item.license = _item.license.type;
+        } else if (_item.license.hasOwnProperty('name')) {
+          _item.license = _item.license.name;
+        }
       }
+
+      // Debugging - If a non-data key is an object, let's log it incase React throws a child object error.
+      _.each(_item, (o, key)=>{
+        if (_.isObject(o) && key !== 'data') {
+          console.log(key, o);
+        }
+      });
 
       rows.push(_item);
     });
@@ -393,6 +400,7 @@ var Container = React.createClass({
     }).orderBy((pkg)=>{
       return _.startsWith(pkg, search[0]);
     }).reverse().value();
+    
     if (query.length > 0) {
       _.pull(query2, query[0]);
     }
@@ -561,52 +569,78 @@ var App = React.createClass({
       console.log('root: ', result.stdout);
       var nmDir = s.nmDir.length > 0 && !s.global ? s.nmDir : `${result.stdout}/`;
       var pkgs = [];
-      fs.readdir(nmDir, (err, dir)=>{
-        for (let i = 0, len = dir.length; i < len; i++) {
-          if (dir[i][0] !== '.') {
-            var packageJSON = JSON.parse(fs.readFileSync(`${nmDir}${dir[i]}/package.json`, 'utf8'));
-            pkgs.push(packageJSON);
+      var dependencies = [];
+
+      var collectDependencies = (dir)=>{
+        return new Promise((resolve, reject)=>{
+          for (let i = 0, len = dir.length; i < len; i++) {
+            if (dir[i][0] !== '.') {
+              var packageJSON = JSON.parse(fs.readFileSync(`${nmDir}${dir[i]}/package.json`, 'utf8'));
+              pkgs.push(packageJSON);
+
+              // Collect dependencies of dependencies in their node_modules directories for global style installations.
+              if (s.global) {
+                fs.readdir(`${nmDir}${dir[i]}/node_modules/`, (err, subDir)=>{
+                  for (let z = 0, len = subDir.length; z < len; z++) {
+                    if (subDir[z][0] !== '.') {
+                      packageJSON = JSON.parse(fs.readFileSync(`${nmDir}${dir[i]}/node_modules/${subDir[z]}/package.json`, 'utf8'));
+                      dependencies.push(packageJSON);
+                    }
+                    if (i === dir.length - 1 && z === subDir.length - 1) {
+                      resolve();
+                    }
+                  }
+                });
+              }
+            }
           }
-        }
-        if (!s.global) {
-          var baseDir = this.getProjectDir(nmDir);
-          var projectJSON = JSON.parse(fs.readFileSync(`${baseDir}package.json`, 'utf8'));
-          var dependencies = [];
+        });
+      };
 
-          // Pull dependencies from the initial node_modules query
-          _.each(projectJSON.dependencies, (dep, key)=>{
-            var refDep = _.findIndex(pkgs, {name: key});
-            if (refDep !== -1) {
-              pkgs[refDep].dev = false;
-              dependencies.push(pkgs[refDep]);
-            }
-          });
-          _.each(projectJSON.devDependencies, (dep, key)=>{
-            var refDep = _.findIndex(pkgs, {name: key});
-            if (refDep !== -1) {
-              pkgs[refDep].dev = true;
-              dependencies.push(pkgs[refDep]);
-            }
-          });
+      fs.readdir(nmDir, (err, dir)=>{
+        collectDependencies(dir).then(()=>{
+          if (s.global) {
+            console.log(dependencies);
+            dependencies = _.concat(dependencies, pkgs);
+          }
+          if (!s.global) {
+            var baseDir = this.getProjectDir(nmDir);
+            var projectJSON = JSON.parse(fs.readFileSync(`${baseDir}package.json`, 'utf8'));
 
-        }
+            // Pull dependencies from the initial node_modules query
+            _.each(projectJSON.dependencies, (dep, key)=>{
+              var refDep = _.findIndex(pkgs, {name: key});
+              if (refDep !== -1) {
+                pkgs[refDep].dev = false;
+                dependencies.push(pkgs[refDep]);
+              }
+            });
+            _.each(projectJSON.devDependencies, (dep, key)=>{
+              var refDep = _.findIndex(pkgs, {name: key});
+              if (refDep !== -1) {
+                pkgs[refDep].dev = true;
+                dependencies.push(pkgs[refDep]);
+              }
+            });
+          }
 
-        var stateUpdate = {
-          pkgs: s.global ? pkgs : dependencies, 
-          installed: pkgs
-        };
-        if (route) {
-          _.assignIn(stateUpdate, {
-            view: 'index', 
-            search: '',
-            searchQuery: [],
-            searchPkgs: [],
-            searchPage: 1,
-            title: s.global ? 'Global Packages' : `${projectJSON.name} ${projectJSON.version}`
-          });
-        }
+          var stateUpdate = {
+            pkgs: s.global ? pkgs : dependencies, 
+            installed: s.global ? dependencies : pkgs
+          };
+          if (route) {
+            _.assignIn(stateUpdate, {
+              view: 'index', 
+              search: '',
+              searchQuery: [],
+              searchPkgs: [],
+              searchPage: 1,
+              title: s.global ? 'Global Packages' : `${projectJSON.name} ${projectJSON.version}`
+            });
+          }
 
-        state.set(stateUpdate);
+          state.set(stateUpdate);
+        });
       });
     });
   },
