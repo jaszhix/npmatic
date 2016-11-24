@@ -1,3 +1,4 @@
+var exec = require('child_process').exec;
 export var formatBytes = (bytes, decimals)=>{
   if (bytes === 0) {
     return '0 Byte';
@@ -21,4 +22,16 @@ export var msToTime = (s)=>{
   output = hrs <= 0 ? output.split('h ')[1] : output;
   output = mins <= 0 ? output.split('m ')[1] : output;
   return output;
+};
+
+export var exc = (cmd)=>{
+  return new Promise((resolve, reject)=>{
+    exec(cmd, function (err, stdout, stderr) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(stdout.trim());
+      }
+    });
+  });
 };

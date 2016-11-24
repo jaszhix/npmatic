@@ -1,6 +1,7 @@
 import state from './state';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import Reflux from 'reflux';
 import _ from 'lodash';
 import $ from 'jquery';
 import {remote} from 'electron';
@@ -10,16 +11,15 @@ import ReactMarkdown from 'react-markdown';
 import onClickOutside from 'react-onclickoutside';
 import fs from 'fs';
 import names from 'all-the-package-names';
-import execa from 'execa';
 import sudo from 'sudo-prompt';
 import toArray from 'object-to-arrays';
 import space from 'to-space-case';
 import pkginfo from 'npm-registry-package-info';
 import openExternal from 'open-external';
 
-const {Menu, MenuItem, dialog} = remote;
+import * as utils from './utils';
 
-import Reflux from 'reflux';
+const {Menu, MenuItem, dialog} = remote;
 
 // Temporary dev context menu
 const contextMenu = new Menu();
@@ -568,7 +568,7 @@ var App = React.createClass({
         cb(error, stdout, stderr);
       });
     } else {
-      execa.shell(command).then(result => {
+      utils.exc(command).then(result => {
         cb(result);
       });
     }
@@ -588,9 +588,9 @@ var App = React.createClass({
       return;
     }
 
-    execa.shell('npm root -g').then(result => {
-      console.log('root: ', result.stdout);
-      var nmDir = s.nmDir.length > 0 && !s.global ? s.nmDir : `${result.stdout}/`;
+    utils.exc('npm root -g').then(result => {
+      console.log('root: ', result);
+      var nmDir = s.nmDir.length > 0 && !s.global ? s.nmDir : `${result}/`;
       var pkgs = [];
       var dependencies = [];
 
