@@ -16,6 +16,7 @@ import toArray from 'object-to-arrays';
 import space from 'to-space-case';
 import pkginfo from 'npm-registry-package-info';
 import openExternal from 'open-external';
+import mngr from 'system-install';
 
 import * as utils from './utils';
 
@@ -47,8 +48,6 @@ window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   contextMenu.popup(remote.getCurrentWindow());
 }, false);
-
-
 
 var PackageColumn = React.createClass({
   getInitialState(){
@@ -537,17 +536,33 @@ var App = React.createClass({
   componentDidMount(){
     this.listenTo(state, this.stateChange);
     this.setState({init: false});
-    
-    // Remove initial splash
-    _.defer(()=>{
-      $(document.body).css({
-        backgroundColor: '#FFF',
-        WebkitTransition: '0.2s'
-      });
-      $('#splash').remove();
-    });
 
-    this.getInstalledPackages();
+    var whichCmd = `${process.platform === 'win32' ? 'where' : 'which'} npm`;
+
+    utils.exc(whichCmd).then(result=>{
+      // Remove initial splash
+      _.defer(()=>{
+        $(document.body).css({
+          backgroundColor: '#FFF',
+          WebkitTransition: '0.2s'
+        });
+        $('#splash').remove();
+      });
+      this.getInstalledPackages();
+    }).catch((e)=>{
+      var installCmd = mngr();
+      dialog.showMessageBox({
+        message: `NodeJS was not detected on your system. Please try installing NodeJS using ${installCmd} nodejs.`,
+        buttons: ['OK', 'More Info']
+      }, result=>{
+        if (result === 0) {
+          window.close();
+        } else {
+          openExternal('https://github.com/nodesource/distributions');
+          window.close();
+        }
+      });
+    });
   },
   stateChange(e){
     this.setState(e);

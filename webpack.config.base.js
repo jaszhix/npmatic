@@ -17,9 +17,9 @@ const config = {
       test: /\.scss$/,
       loaders: ['style', 'css?modules', 'postcss', 'sass']
     }, {
-      test: /\.js$/,
-      exclude: /(node_modules|bower_components)/,
-      loaders: ['babel']
+      test: /\.(js|jsx)$/, 
+      exclude: /node_modules/,
+      loader: 'babel'
     }, {
       test: /\.html$/,
       loaders: ['html']
