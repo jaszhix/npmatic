@@ -21,11 +21,6 @@ config.output.publicPath = 'http://localhost:4000/dist/';
 // Enable source maps
 config.devtool = 'source-map';
 
-// ES lint
-config.eslint = {
-  parser: 'babel-eslint'
-};
-
 // Dev plugins
 config.plugins.push(
   new webpack.optimize.OccurenceOrderPlugin(),

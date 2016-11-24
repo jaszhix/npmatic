@@ -17,14 +17,8 @@ config.entry = [
 // Set output
 config.output.publicPath = path.join(__dirname, '/dist/');
 
-// ES lint
-config.eslint = {
-  parser: 'babel-eslint'
-};
-
 // Dev plugins
 config.plugins.push(
-  new webpack.optimize.OccurenceOrderPlugin(),
   new webpack.optimize.UglifyJsPlugin({
     sourceMap: false,
     compress: {
@@ -46,7 +40,8 @@ config.plugins.push(
     output: {
       comments: false
     }
-  })
+  }),
+  new webpack.optimize.OccurenceOrderPlugin()
 );
 
 // Specify Electron renderer
