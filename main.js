@@ -38,7 +38,7 @@ app.on('ready', function() {
   });
   // creates a new browser window
   mainWindow = new BrowserWindow({
-    icon: './app/assets/images/n-large.png',
+    icon: './app/assets/images/n-48.png',
     x: mainWindowState.x,
     y: mainWindowState.y,
     width: mainWindowState.width,
