@@ -83,7 +83,6 @@ body {
   overflow-x: hidden;
   background-color: #CB3837;
   -webkit-font-smoothing: antialiased;
-  -webkit-user-select:none;
   cursor: default;
 }
 
@@ -36765,7 +36764,9 @@ html.ios body {
   max-width: 80px;
   float: left;
 }
-#app > div > div.ui.top.attached.menu > div.right.menu > div, #app > div > div.ui.top.attached.menu > div.right.menu > div > div > div, #app > div > div.ui.top.attached.menu > div.ui.dropdown.icon.item, th {
+#app > div > div.ui.top.attached.menu > div.right.menu > div, 
+#app > div > div.ui.top.attached.menu > div.right.menu > div > div > div, 
+#app > div > div.ui.top.attached.menu > div.ui.dropdown.icon.item, th {
   cursor: default !important;
 }
 .ui {

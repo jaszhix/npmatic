@@ -85,12 +85,13 @@ var PackageColumn = React.createClass({
     }
   },
   render(){
-    var textOverflow = {
+    var subItemContainerStyle = {
       whiteSpace: 'nowrap',
       width: `${this.props.width / 7}px`,
       overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      display: 'inline-block'
+      subItemContainerStyle: 'ellipsis',
+      display: 'inline-block',
+      WebkitUserSelect: 'none'
     };
     return (
       <div className="column">
@@ -112,11 +113,14 @@ var PackageColumn = React.createClass({
                     {item.key.length <= 2 ? item.key.toUpperCase() : _.upperFirst(item.key)}
                   </div>
                   {item.key === 'description' || item.key === 'readme' ?
-                  <div ref="md" className="thirteen wide column">
+                  <div ref="md" className="thirteen wide column" style={{
+                    WebkitUserSelect: item.key === 'readme' ? 'initial' : 'none',
+                    cursor: item.key === 'readme' ? 'initial' : 'default'
+                  }}>
                     <ReactMarkdown source={item.value} />
                   </div>
                   :
-                  <div className="thirteen wide column" style={textOverflow}>
+                  <div className="thirteen wide column" style={subItemContainerStyle}>
                     {_.isArray(item.value) ? 
                       <div onMouseLeave={this.state.subItemHover !== -1 ? ()=>this.setState({subItemHover: -1}) : null}>
                         {item.value.map((subItem, s)=>{
@@ -125,19 +129,19 @@ var PackageColumn = React.createClass({
                             return (
                               <div 
                               key={s} 
-                              className="ui grid segments" 
+                              className="ui grid segments column-nodes" 
                               style={{backgroundColor: this.state.subItemHover === `${item.key}-${s}` && (isDependencies || subItem[0] === 'url') ? 'rgb(249, 250, 251)' : 'initial'}}
                               onClick={item.key.indexOf('depend') !== -1 ? ()=>this.handleDependencyClick(subItem[0]) : subItem[0] === 'url' ? ()=>this.handleUrlClick(item, subItem) : null} 
                               onMouseEnter={isDependencies || subItem[0] === 'url' ? ()=>this.setState({subItemHover: `${item.key}-${s}`}) : null}>
                                 <div className={`${isDependencies ? 'ten' : 'four'} wide column`} style={{fontWeight: '500'}}>{item.key.indexOf('depend') === -1 && item.key !== 'scripts' ? subItem[0].length <= 3 ? subItem[0].toUpperCase() : _.upperFirst(subItem[0]) : subItem[0]}</div>
-                                <div className={`${isDependencies ? 'six' : 'twelve'} wide column`} style={textOverflow}>{subItem[1]}</div>
+                                <div className={`${isDependencies ? 'six' : 'twelve'} wide column`} style={subItemContainerStyle}>{subItem[1]}</div>
                               </div>
                             );
                   
                           } else if (_.isString(subItem)) {
                             return (
                               <div key={s} className="ui grid segment">
-                                <div className="sixteen wide column" style={textOverflow}>{subItem}</div>
+                                <div className="sixteen wide column" style={subItemContainerStyle}>{subItem}</div>
                               </div>
                             );
                           } else {
@@ -146,7 +150,7 @@ var PackageColumn = React.createClass({
                               return (
                                 <div key={k} className="ui grid segments">
                                   <div className="three wide column" style={{fontWeight: '500'}}>{_.upperFirst(key)}</div>
-                                  <div className="thirteen wide column" style={textOverflow}>{subItem[key]}</div>
+                                  <div className="thirteen wide column" style={subItemContainerStyle}>{subItem[key]}</div>
                                 </div>
                               );
                             });
@@ -327,7 +331,7 @@ var Table = React.createClass({
   render(){
     var s = this.state;
     return (
-      <table className="ui celled padded table">
+      <table className="ui celled padded table" style={{WebkitUserSelect: 'none'}}>
         <thead>
           <tr>
           {s.columns.map((column, c)=>{
@@ -736,7 +740,8 @@ var App = React.createClass({
         <div className="ui top attached menu" style={{
           position: 'absolute',
           maxHeight: '42px',
-          zIndex: '99'
+          zIndex: '99',
+          WebkitUserSelect: 'none'
         }}>
           <div className="ui dropdown icon item" style={{
             opacity: isChildView ? '1' : '0',
