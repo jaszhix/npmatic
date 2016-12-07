@@ -183,7 +183,6 @@ var Package = React.createClass({
   formatPackage(p){
     document.body.scrollIntoView();
     var items = [];
-    var removedKeys = ['_inCache', '_phantomChildren', '_shrinkwrap', '_args', '_npmOperationalInternal', 'location', 'name'];
 
     p.s.package = _.pick(p.s.package, [
       'readme',
@@ -216,9 +215,6 @@ var Package = React.createClass({
     ]);
 
     _.each(p.s.package, (value, key)=>{
-      if (removedKeys.indexOf(key) !== -1 || value === {}) {
-        return;
-      }
       if (key === 'readme' && value === 'ERROR: No README data found!') {
         return;
       }
@@ -551,16 +547,18 @@ var App = React.createClass({
       this.getInstalledPackages();
     }).catch((e)=>{
       var installCmd = mngr();
-      dialog.showMessageBox({
-        message: `NodeJS was not detected on your system. Please try installing NodeJS using ${installCmd} nodejs.`,
-        buttons: ['OK', 'More Info']
-      }, result=>{
-        if (result === 0) {
-          window.close();
-        } else {
-          openExternal('https://github.com/nodesource/distributions');
-          window.close();
-        }
+      _.defer(()=>{
+        dialog.showMessageBox({
+          message: `NodeJS was not detected on your system. Please try installing NodeJS using ${installCmd} nodejs.`,
+          buttons: ['OK', 'More Info']
+        }, result=>{
+          if (result === 0) {
+            window.close();
+          } else {
+            openExternal('https://github.com/nodesource/distributions');
+            window.close();
+          }
+        });
       });
     });
   },

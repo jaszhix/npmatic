@@ -4,3 +4,4 @@ node_modules/
 dist/
 /.jshintrc
 /.eslintrc.js
+/npmatic-linux-x64
