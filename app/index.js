@@ -43,7 +43,6 @@ contextMenu.append(new MenuItem({
     }
   }
 }));
-
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   contextMenu.popup(remote.getCurrentWindow());
@@ -550,20 +549,7 @@ var App = React.createClass({
       });
       this.getInstalledPackages();
     }).catch((e)=>{
-      var installCmd = mngr();
-      _.defer(()=>{
-        dialog.showMessageBox({
-          message: `NodeJS was not detected on your system. Please try installing NodeJS using ${installCmd} nodejs.`,
-          buttons: ['OK', 'More Info']
-        }, result=>{
-          if (result === 0) {
-            window.close();
-          } else {
-            openExternal('https://github.com/nodesource/distributions');
-            window.close();
-          }
-        });
-      });
+      this.handleNPMNotFound();
     });
   },
   stateChange(e){
@@ -573,6 +559,32 @@ var App = React.createClass({
     this.setState({
       width: window.innerWidth,
       height: window.innerHeight
+    });
+  },
+  handleNPMNotFound(){
+    var installCmd = mngr();
+    var infoUrl = 'https://github.com/nodesource/distributions';
+    var helpMessage = 'NPM was not detected on your system.';
+
+    if (process.platform === 'win32') {
+      infoUrl = 'https://nodejs.org';
+      helpMessage += ' Click More Info to be redirected to the NodeJS website. After installing NodeJS, you may need to sign in again.';
+    } else {
+      helpMessage += ` NPM was not detected on your system. Please try installing NodeJS using ${installCmd} nodejs.`;
+    }
+
+    _.defer(()=>{
+      dialog.showMessageBox({
+        message: helpMessage,
+        buttons: ['OK', 'More Info']
+      }, result=>{
+        if (result === 0) {
+          window.close();
+        } else {
+          openExternal(infoUrl);
+          window.close();
+        }
+      });
     });
   },
   cmdExec(command, cb){
@@ -607,23 +619,27 @@ var App = React.createClass({
 
     utils.exc('npm root -g').then(result => {
       console.log('root: ', result);
-      var nmDir = s.nmDir.length > 0 && !s.global ? s.nmDir : `${result}/`;
+      var f = process.platform === 'win32' ? '\\' : '/';
+      var nmDir = s.nmDir.length > 0 && !s.global ? s.nmDir : `${result}${f}`;
       var pkgs = [];
       var dependencies = [];
 
       var collectDependencies = (dir)=>{
         return new Promise((resolve, reject)=>{
+          if (process.platform === 'win32' && dir === undefined) {
+            resolve();
+          }
           for (let i = 0, len = dir.length; i < len; i++) {
             if (dir[i][0] !== '.') {
-              var packageJSON = JSON.parse(fs.readFileSync(`${nmDir}${dir[i]}/package.json`, 'utf8'));
+              var packageJSON = JSON.parse(fs.readFileSync(`${nmDir}${dir[i]}${f}package.json`, 'utf8'));
               pkgs.push(packageJSON);
 
               // Collect dependencies of dependencies in their node_modules directories for global style installations.
               if (s.global) {
-                fs.readdir(`${nmDir}${dir[i]}/node_modules/`, (err, subDir)=>{
+                fs.readdir(`${nmDir}${dir[i]}${f}node_modules${f}`, (err, subDir)=>{
                   for (let z = 0, len = subDir.length; z < len; z++) {
                     if (subDir[z][0] !== '.') {
-                      packageJSON = JSON.parse(fs.readFileSync(`${nmDir}${dir[i]}/node_modules/${subDir[z]}/package.json`, 'utf8'));
+                      packageJSON = JSON.parse(fs.readFileSync(`${nmDir}${dir[i]}${f}node_modules${f}${subDir[z]}${f}package.json`, 'utf8'));
                       dependencies.push(packageJSON);
                     }
                     if (i === dir.length - 1 && z === subDir.length - 1) {
@@ -640,6 +656,9 @@ var App = React.createClass({
       };
 
       fs.readdir(nmDir, (err, dir)=>{
+        if (err) {
+          this.handleNPMNotFound();
+        }
         collectDependencies(dir).then(()=>{
           if (s.global) {
             dependencies = _.concat(dependencies, pkgs);
@@ -680,6 +699,8 @@ var App = React.createClass({
           }
 
           state.set(stateUpdate);
+        }).catch(()=>{
+          this.handleNPMNotFound();
         });
       });
     });
