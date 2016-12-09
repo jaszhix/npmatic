@@ -1,15 +1,17 @@
+import {remote} from 'electron';
+import fs from 'fs';
+
 import state from './state';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Reflux from 'reflux';
 import _ from 'lodash';
 import $ from 'jquery';
-import {remote} from 'electron';
 import kmp from 'kmp';
 import ReactUtils from 'react-utils';
 import ReactMarkdown from 'react-markdown';
 import onClickOutside from 'react-onclickoutside';
-import fs from 'fs';
+
 import names from 'all-the-package-names';
 import sudo from 'sudo-prompt';
 import toArray from 'object-to-arrays';
@@ -23,7 +25,7 @@ import * as utils from './utils';
 const {Menu, MenuItem, dialog} = remote;
 
 // Temporary dev context menu
-const contextMenu = new Menu();
+/*const contextMenu = new Menu();
 contextMenu.append(new MenuItem({
   label: 'Reload',
   accelerator: 'CmdOrCtrl+R',
@@ -46,7 +48,7 @@ contextMenu.append(new MenuItem({
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   contextMenu.popup(remote.getCurrentWindow());
-}, false);
+}, false);*/
 
 var PackageColumn = React.createClass({
   getInitialState(){
@@ -479,9 +481,8 @@ var DropdownMenu = onClickOutside(React.createClass({
       type: 'info',
       buttons: [],
       title: 'npmatic',
-      message: 'npmatic 0.0.1 ALPHA',
+      message: 'npmatic 0.1.0 Beta',
       detail: 'Software written by Jason Hicks and licensed under the MIT License.'
-
     });
   },
   handleOpenDir(){

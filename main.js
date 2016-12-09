@@ -50,7 +50,6 @@ app.on('ready', function() {
   mainWindowState.manage(mainWindow);
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.show();
-    console.log('window is now visible!');
   });
   // load the file
   if (process.env.NODE_ENV === 'production') {
