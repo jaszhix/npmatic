@@ -26,6 +26,17 @@ export var msToTime = (s)=>{
 
 export var exc = (cmd)=>{
   return new Promise((resolve, reject)=>{
+    var opts = {
+      encoding: 'utf8',
+      timeout: 0,
+      maxBuffer: 200*1024,
+      killSignal: 'SIGTERM',
+      cwd: null,
+      env: null
+    };
+    if (process.platform === 'win32') {
+      opts.shell = 'cmd.exe'; 
+    }
     exec(cmd, function (err, stdout, stderr) {
       if (err) {
         reject(err);
