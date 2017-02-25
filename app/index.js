@@ -22,6 +22,10 @@ import mngr from 'system-install';
 
 import * as utils from './utils';
 
+if (module.hot) {
+  module.hot.accept();
+}
+
 const {Menu, MenuItem, dialog} = remote;
 
 // Temporary dev context menu

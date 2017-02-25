@@ -4,7 +4,10 @@
   "description": "A front-end for NPM package management, developed with NodeJS and Electron.",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start-hot": "cross-env HOT=1 NODE_ENV=development electron -r babel-register -r babel-polyfill main.js",
+    "hot-server": "cross-env NODE_ENV=development node --max_old_space_size=2096 -r babel-register webpack.server.js",
+    "dev": "npm run hot-server -- --start-hot",
+    "electron": "electron .",
     "build": "webpack --config webpack.config.prod.js --progress --profile --bail",
     "pack": "build --dir",
     "dist-linux": "npm run build && build -l",
@@ -17,7 +20,9 @@
     "linux": {
       "category": "System",
       "description": "A front-end for NPM package management.",
-      "target": ["deb"],
+      "target": [
+        "deb"
+      ],
       "desktop": {
         "type": "Application",
         "encoding": "UTF-8",
@@ -25,7 +30,10 @@
         "exec": "npmatic",
         "icon": "./build/48x48.png"
       },
-      "depends": ["libappindicator1", "libnotify-bin"],
+      "depends": [
+        "libappindicator1",
+        "libnotify-bin"
+      ],
       "executableName": "npmatic"
     },
     "dmg": {
@@ -62,12 +70,19 @@
     "autoprefixer": "^6.1.2",
     "babel-core": "^6.3.17",
     "babel-loader": "^6.2.0",
+    "babel-plugin-react-transform": "^2.0.2",
+    "babel-polyfill": "^6.20.0",
+    "babel-preset-env": "^1.1.4",
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-es2016": "^6.16.0",
     "babel-preset-es2017": "^6.16.0",
-    "babel-preset-react": "^6.3.13",
+    "babel-preset-react": "^6.16.0",
+    "babel-preset-react-hmre": "^1.1.1",
+    "babel-preset-react-optimize": "^1.0.1",
     "babel-preset-stage-0": "^6.16.0",
+    "babel-register": "^6.18.0",
     "better-npm-run": "0.0.11",
+    "cross-env": "^3.1.4",
     "css-loader": "^0.25.0",
     "electron": "^1.4.11",
     "eslint": "^3.8.1",
@@ -77,6 +92,7 @@
     "file-loader": "^0.9.0",
     "hot-reload-server": "0.0.4",
     "html-loader": "^0.4.0",
+    "http-proxy": "^1.16.2",
     "json-loader": "^0.5.4",
     "node-sass": "^3.4.2",
     "postcss": "^5.0.13",
@@ -86,9 +102,10 @@
     "svgo": "^0.7.1",
     "svgo-loader": "^1.1.0",
     "url-loader": "^0.5.7",
-    "webpack": "^1.12.9",
-    "webpack-dev-middleware": "^1.4.0",
-    "webpack-hot-middleware": "^2.6.0",
+    "webpack": "^1.14.0",
+    "webpack-dev-middleware": "^1.9.0",
+    "webpack-dev-server": "^1.16.2",
+    "webpack-hot-middleware": "^2.14.0",
     "webpack-target-electron-renderer": "^0.4.0"
   },
   "dependencies": {

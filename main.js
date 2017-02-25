@@ -9,14 +9,6 @@ const BrowserWindow = electron.BrowserWindow;
 // Load environmental variables
 require('dotenv').load();
 
-if (process.env.NODE_ENV === 'development') {
-  let hotReloadServer = require('hot-reload-server');
-  let webpackConfig = require('./webpack.config.dev');
-  hotReloadServer(webpackConfig, {
-    publicPath: '/dist'
-  }).start();
-}
-
 // Create a variable to hold the window
 let mainWindow = null;
 
