@@ -26,18 +26,34 @@ var state = Reflux.createStore({
       searchPage: 1,
       searchPageSize: 20
     };
+    this.step = 0;
+    this.history = [];
   },
   set(obj, cb=null){
     console.log('STATE INPUT: ', obj);
     _.assignIn(this.state, _.cloneDeep(obj));
     console.log('STATE: ', this.state);
     this.trigger(this.state);
+    ++this.step;
+    this.history.push({
+      object: _.cloneDeep(this.state),
+      step: this.step
+    });
     if (cb) {
       _.defer(()=>cb());
     }
   },
   get(){
     return this.state;
+  },
+  reverseAtStep(step){
+    let refStep = _.findIndex(this.history, {step: step});
+    let refObject = this.history[refStep].object;
+    this.state = refObject;
+    this.trigger(this.state);
+  },
+  reverseOnce(){
+    this.reverseAtStep(this.step - 1);
   }
 });
 

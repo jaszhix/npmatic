@@ -744,11 +744,7 @@ var App = React.createClass({
     }
   },
   handleLeft(){
-    if (this.state.view === 'search' && this.state.searchPage > 1) {
-      state.set({searchPage: this.state.searchPage - 1});
-    } else {
-      this.getInstalledPackages();
-    }
+    state.reverseOnce();
   },
   handleRight(){
     state.set({searchPage: this.state.searchPage + 1});
