@@ -412,7 +412,7 @@ var Container = React.createClass({
       return;
     }
 
-    if (lastProps.s.view === 'package' && lastProps.s.search === p.s.search) {
+    if (lastProps.s.view === 'package' && lastProps.s.search === p.s.search && p.s.searchPkgs.length > 0) {
       state.set({title: `Results for '${p.s.search}'`});
       return;
     }
@@ -744,13 +744,20 @@ var App = React.createClass({
     }
   },
   handleLeft(){
-    state.reverseOnce();
+    if (this.state.view === 'search' && this.state.searchPage > 1) {
+      state.set({searchPage: this.state.searchPage - 1});
+    } else {
+      this.getInstalledPackages();
+    }
   },
   handleRight(){
     state.set({searchPage: this.state.searchPage + 1});
   },
   render(){
     var s = this.state;
+    let canMoveForward = state.canMoveForward();
+    let canMoveBackwards = state.canMoveBackwards();
+    console.log(canMoveBackwards, canMoveForward)
     var isChildView = s.view !== 'index';
     var isInstalled = null;
     var isPaginated = s.view === 'search' && s.searchQuery.length > 20 && s.pkgs.length >= 20;
@@ -768,18 +775,18 @@ var App = React.createClass({
           <div className="ui dropdown icon item" style={{
             opacity: isChildView ? '1' : '0',
             WebkitTransition: 'opacity 0.2s'
-          }} onClick={isChildView ? ()=>this.handleLeft() : null}>
+          }} onClick={canMoveBackwards ? ()=>state.reverseOnce() : ()=>this.handleLeft()}>
             <i className="chevron left icon"></i>
           </div>
           <div className="ui dropdown icon item" style={{
-            opacity: isPaginated ? '1' : '0',
+            opacity: (isPaginated || canMoveForward) && isChildView ? '1' : '0',
             WebkitTransition: 'opacity 0.2s'
-          }} onClick={isPaginated ? ()=>this.handleRight() : null}>
+          }} onClick={isPaginated ? ()=>this.handleRight() : canMoveForward ? ()=>state.forwardOnce() : null}>
             <i className="chevron right icon"></i>
           </div>
           <h2 style={{
             position: 'absolute',
-            left: !isChildView ? '32px' : isPaginated ? '102px' : '62px',
+            left: !isChildView ? '32px' : isPaginated || canMoveForward ? '102px' : '62px',
             top: '5px',
             margin: isChildView ? '0px' : 'initial',
             WebkitTransition: 'left 0.1s'
