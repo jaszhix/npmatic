@@ -13,12 +13,20 @@ import ReactMarkdown from 'react-markdown';
 import onClickOutside from 'react-onclickoutside';
 
 import names from 'all-the-package-names';
+let _names = [];
+for (let i = 0, len = names.length; i < len; i++) {
+  _names.push({
+    name: names[i]
+  });
+}
+
 import sudo from 'sudo-prompt';
 import toArray from 'object-to-arrays';
 import space from 'to-space-case';
 import pkginfo from 'npm-registry-package-info';
 import openExternal from 'open-external';
 import mngr from 'system-install';
+import Fuse from 'fuse.js';
 
 import * as utils from './utils';
 
@@ -29,7 +37,7 @@ if (module.hot) {
 const {Menu, MenuItem, dialog} = remote;
 
 // Temporary dev context menu
-/*const contextMenu = new Menu();
+const contextMenu = new Menu();
 contextMenu.append(new MenuItem({
   label: 'Reload',
   accelerator: 'CmdOrCtrl+R',
@@ -52,7 +60,7 @@ contextMenu.append(new MenuItem({
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   contextMenu.popup(remote.getCurrentWindow());
-}, false);*/
+}, false);
 
 var PackageColumn = React.createClass({
   getInitialState(){
@@ -231,8 +239,8 @@ var Package = React.createClass({
         value = toArray(value);
       }
       key = space(key);
-      var spacedKeys = ['npm', 'node'];
-      for (var i = spacedKeys.length - 1; i >= 0; i--) {
+      let spacedKeys = ['npm', 'node'];
+      for (let i = 0, len = spacedKeys.length; i < len; i++) {
         if (key.indexOf(spacedKeys[i]) !== -1) {
           key = `${i === 0 ? spacedKeys[i].toUpperCase() : _.upperFirst(spacedKeys[i])} ${_.upperFirst(key.split(spacedKeys[i])[1])}`;
         }
@@ -417,24 +425,26 @@ var Container = React.createClass({
       return;
     }
 
+
     var search = p.s.search.indexOf(' ') !== -1 ? p.s.search.split(' ').join('-') : p.s.search;
 
-    var query = _.filter(names, (name)=>{
-      return name === search;
-    });
-    var query2 = _.chain(names).filter((name)=>{
-      return kmp(name, search) !== -1;
-    }).orderBy((pkg)=>{
-      return _.startsWith(pkg, search[0]);
-    }).reverse().value();
+    let query = [];
+    let page = null;
     
-    if (query.length > 0) {
-      _.pull(query2, query[0]);
+    if (p.s.search !== p.s.lastSearch) {
+      let nameSearch = new Fuse(_names, {
+        keys: ['name'],
+        threshold: 0.2
+      });
+      query = _.map(nameSearch.search(search), 'name');
+      page = 1;
+    } else {
+      query = p.s.searchQuery;
+      page = p.s.searchPage;
     }
 
-    query = _.concat(query, query2);
-    
-    var end = p.s.searchPage * p.s.searchPageSize;
+    // Handle pagination
+    var end = page * p.s.searchPageSize;
     var start = end - p.s.searchPageSize;
 
     pkginfo({packages: _.slice(query, start, end)}, (err, data)=>{
@@ -442,15 +452,32 @@ var Container = React.createClass({
         console.log('ERR: ', err);
       }
 
+      let exact = null;
+
       var packages = [];
       _.each(data.data, (pkg, key)=>{
         if (pkg.hasOwnProperty('versions')) {
           pkg.version = _.chain(pkg.versions).keys().last().value();
           _.assignIn(pkg, pkg.versions[pkg.version]);
         }
-        packages.push(pkg);
+        if (pkg.name === search) {
+          exact = [pkg];
+        } else {
+          packages.push(pkg);
+        }
       });
-      state.set({pkgs: packages, searchQuery: query, searchPkgs: packages, title: `Results for '${search}'`});
+      if (exact) {
+        packages = _.concat(exact, packages);
+      }
+      state.set({
+        pkgs: packages,
+        searchQuery: query,
+        searchPkgs: packages,
+        searchPage: page,
+        searchLoading: false,
+        title: `Results for '${search}'`,
+        lastSearch: search
+      });
     });
   },
   render(){
@@ -732,10 +759,9 @@ var App = React.createClass({
   },
   triggerSearch(){
     if (this.state.view === 'search') {
-      state.set({view: 'none'});
-      _.defer(()=>state.set({view: 'search'}));
+      state.set({view: 'search', searchLoading: true});
     } else {
-      state.set({view: 'search'});
+      state.set({view: 'search', searchLoading: true});
     }
   },
   handleEnter(e, id){
@@ -747,7 +773,9 @@ var App = React.createClass({
     if (this.state.view === 'search' && this.state.searchPage > 1) {
       state.set({searchPage: this.state.searchPage - 1});
     } else {
-      this.getInstalledPackages();
+      state.set({search: ''}, ()=>{
+        this.getInstalledPackages();
+      });
     }
   },
   handleRight(){
@@ -757,7 +785,6 @@ var App = React.createClass({
     var s = this.state;
     let canMoveForward = state.canMoveForward();
     let canMoveBackwards = state.canMoveBackwards();
-    console.log(canMoveBackwards, canMoveForward)
     var isChildView = s.view !== 'index';
     var isInstalled = null;
     var isPaginated = s.view === 'search' && s.searchQuery.length > 20 && s.pkgs.length >= 20;
@@ -805,7 +832,7 @@ var App = React.createClass({
             <div className="item">
               <div className="ui transparent icon input">
                 <input type="text" placeholder="Search..." value={s.search} onChange={(e)=>state.set({search: e.target.value})} onKeyDown={this.handleEnter}/>
-                <i className="search link icon" style={{cursor: 'default'}} onClick={this.triggerSearch}/>
+                <i className={s.searchLoading ? 'ui basic loading button' : 'search link icon'} style={{cursor: 'default', padding: '0px'}} onClick={this.triggerSearch}/>
               </div>
             </div>
             <DropdownMenu s={s} onDirOpen={this.getInstalledPackages} />

@@ -22,9 +22,11 @@ var state = Reflux.createStore({
       settingsOpen: false,
       view: 'index',
       search: '',
+      lastSearch: '',
       searchQuery: [],
       searchPage: 1,
-      searchPageSize: 20
+      searchPageSize: 20,
+      searchLoading: false
     };
     this.index = 0;
     this.history = [];
@@ -41,11 +43,13 @@ var state = Reflux.createStore({
     }
 
     // Record this state object to our history collection.
-    this.index = this.history.length;
-    this.history.push({
-      object: _.clone(this.state),
-      index: this.index
-    });
+    if (!obj.hasOwnProperty('search')) {
+      this.index = this.history.length;
+      this.history.push({
+        object: _.clone(this.state),
+        index: this.index
+      });
+    }
 
     if (cb) {
       _.defer(()=>cb());
@@ -56,20 +60,20 @@ var state = Reflux.createStore({
   },
   moveToIndex(index){
     let refIndex = _.findIndex(this.history, {index: index});
-    if (refIndex === -1) {
+    if (refIndex === -1 || this.history[refIndex].object.view === 'index') {
       refIndex = 0;
     }
 
     let refObject = this.history[refIndex].object;
 
     // Don't allow reversing to state in a search view as the asyc handlers will keep the user stuck.
-    if (index < this.index && refObject.title === 'search') {
+    if (index < this.index && refObject.view === 'search') {
       this.moveToIndex(index - 2);
       return;
     }
 
     this.index = index;
-    console.log('STATE INDEX: ', this.index)
+    console.log('STATE INDEX: ', this.index);
     this.state = refObject;
     this.trigger(this.state);
   },
