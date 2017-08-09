@@ -1,47 +1,46 @@
-const webpack = require('webpack');
-const path = require('path');
+/**
+ * Base webpack config used across other specific configs
+ */
 
-const config = {
-  entry: [
-    path.join(__dirname, '/app/index.js')
-  ],
-  output: {
-    path: path.join(__dirname, '/dist'),
-    filename: 'bundle.js'
-  },
+import path from 'path';
+import webpack from 'webpack';
+import {dependencies as externals} from './app/package.json';
+
+export default {
+  externals: Object.keys(externals || {}),
+
   module: {
-    loaders: [{
-      test: /\.css$/,
-      loader: 'style-loader!css-loader'
-    }, {
-      test: /\.scss$/,
-      loaders: ['style', 'css?modules', 'postcss', 'sass']
-    }, {
-      test: /\.(js|jsx)$/, 
+    rules: [{
+      test: /\.jsx?$/,
       exclude: /node_modules/,
-      loader: 'babel'
-    }, {
-      test: /\.html$/,
-      loaders: ['html']
-    }, {
-      test: /\.json$/,
-      loaders: ['json']
-    }, {
-      test: /\.(png|jpg|gif)$/,
-      loader: 'file-loader?name=[hash].[ext]'
-    }, ]
+      use: {
+        loader: 'babel-loader',
+        options: {
+          cacheDirectory: true
+        }
+      }
+    }]
   },
-  postcss: function () {
-    return [
-      require('autoprefixer')
-    ];
-  },
-  plugins: [
-    new webpack.ProvidePlugin({
-      $: 'jquery',
-      jQuery: 'jquery'
-    })
-  ]
-};
 
-module.exports = config;
+  output: {
+    path: path.join(__dirname, 'app'),
+    filename: 'bundle.js',
+    // https://github.com/webpack/webpack/issues/1114
+    libraryTarget: 'commonjs2'
+  },
+
+  /**
+   * Determine the array of extensions that should be used to resolve modules.
+   */
+  resolve: {
+    extensions: ['.js', '.jsx', '.json'],
+    modules: [
+      path.join(__dirname, 'app'),
+      'node_modules',
+    ],
+  },
+
+  plugins: [
+    new webpack.NamedModulesPlugin(),
+  ],
+};
