@@ -1,7 +1,6 @@
 # npmatic
 
-This is a front-end for NPM package management, developed with NodeJS and Electron. It is currently experimental and under active development.
-
+This is a front-end for NPM package management, developed with NodeJS and Electron.
 ## Features
 
   * List, and show details of globally installed modules.
@@ -12,7 +11,8 @@ This is a front-end for NPM package management, developed with NodeJS and Electr
 ## Contributing
 
 ````
-npm install && npm start
+yarn
+npm run dev
 ````
 
 ![image](https://cloud.githubusercontent.com/assets/6859057/20433769/c0ab0a70-ad6a-11e6-8946-3b547ef07352.png)
